@@ -1,0 +1,280 @@
+---
+title: 'PSY221A: Data Validation and Wrangling'
+author: "Sarah Touzani"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+
+```
+
+H1: Respondents who spent most of their childhood in France rate infidelity as less morally wrong than respondents raised elsewhere.
+
+H2: Respondents who spend more time per day on their appearance are more jealous about their partner's sexual infidelity.
+
+## Variables
+
+- **H1, independent variable:** `Country_raised` (country where the respondent spent most of childhood)
+- **H1, dependent variables:** `infmoral_sex` and `infmoral_emo` (1 = Not at all morally wrong, 7 = Extremely morally wrong)
+- **H2, independent variable:** sum of the eight `Time_A_` items (minutes per day, each 0 to 360)
+- **H2, dependent variable:** `jealsex` (1 = Not at all jealous, 7 = Extremely jealous)
+
+## 1. Load the package and data
+
+```{r load, message=FALSE}
+#load the codebook package
+library(codebook)
+
+#load data/raw/data_doctored.csv
+raw<-read.csv("../Data/Raw Data/data_doctored.csv")
+
+#check row and column counts, and inspect the first few rows
+dim(raw)
+str(raw)
+
+
+#make data with ID, country raised, both infidelity items, the eight appearance time items, and jealsex; keep raw unchanged
+timeVars <- c("Time_A_makeup_1", "Time_A_hyg_1", "Time_A_cosm_1", "Time_A_exercise_1",
+              "Time_A_hair_1", "Time_A_dress_1", "Time_A_diet_1", "Time_A_other_1")
+
+data <- raw[, c("ResponseId", "Country_raised", "infmoral_sex", "infmoral_emo",
+                timeVars, "jealsex")]
+
+dim(data)
+str(data)
+
+
+
+
+
+
+
+
+```
+
+
+## 2. Check participant IDs
+
+```{r participant_ids}
+
+#count na
+sum(is.na(data$ResponseId))
+
+#count blank
+sum(data$ResponseId=="",na.rm=TRUE)
+
+#count duplicates
+sum(duplicated(data$ResponseId))
+
+#inspect records with missing or blank IDs
+missingID<- which(is.na(data$ResponseId))
+print(data[missingID,])
+
+#remove the known empty record with no ID, then check the row count
+data<-data[!is.na(data$ResponseId),]
+dim(data)
+
+```
+
+
+## 3. Recode country raised
+
+```{r sex_at_birth}
+# codebook: Country_raised is country-name text; France is listed as "France"
+
+#check how many people were raised in France
+sum(data$Country_raised=="France", na.rm=TRUE)
+
+#turn Country_raised into a factor with labels Elsewhere and France
+data$raisedFrance<- ifelse(data$Country_raised=="France", 1, 0)
+data$raisedFrance<- factor(data$raisedFrance,
+                           levels=c(0,1),
+                           labels=c("Elsewhere","France"))
+table(data$raisedFrance, useNA="ifany")
+
+```
+
+
+## 4. Validate infidelity morality items
+
+```{r infidelity_items}
+#group both infidelity morality variables
+infVars<- c("infmoral_sex","infmoral_emo")
+
+#see summary of variables
+summary(data[,infVars])
+#count NAs
+colSums(is.na(data[,infVars]))
+
+#inspect the response frequencies for each item
+for(i in infVars){
+  print(i)
+  print(table(data[,i],useNA="ifany"))
+}
+
+#replace any codes outside 1-7 with NA
+#codebook: 1 = Not at all morally wrong, 7 = Extremely morally wrong
+for (i in infVars){
+  data[,i]<- ifelse(data[,i] %in% 1:7, data[,i], NA)
+}
+
+#make h1Data with ID, raisedFrance, infmoral_sex, and infmoral_emo
+#keep participants with a known country group and at least one valid rating
+h1Data <- data[!is.na(data$raisedFrance) &
+                 (!is.na(data$infmoral_sex) | !is.na(data$infmoral_emo)),
+               c("ResponseId","raisedFrance","infmoral_sex","infmoral_emo")]
+
+dim(h1Data)
+head(h1Data)
+
+
+```
+
+
+## 5. Check appearance time and jealousy items
+```{r appearance_items}
+#define the items to check; the 8 time items are minutes per day
+#codebook: each time item is 0-360; 360 means 6 hours or more
+
+#check the summaries and missing responses
+summary(data[,timeVars])
+colSums(is.na(data[,timeVars]))
+
+#replace any values outside 0-360 with NA
+for (i in timeVars){
+  data[,i]<- ifelse(data[,i] %in% 0:360, data[,i], NA)
+}
+colSums(is.na(data[,timeVars]))
+
+#jealsex uses response codes 1-7
+#jealsex: 1=Not at all jealous, 7=Extremely jealous
+likert7 <- c("jealsex")
+
+#check the summary and missing responses
+summary(data$jealsex)
+sum(is.na(data$jealsex))
+
+#inspect the response frequencies for each item
+for(i in likert7){
+  print(i)
+  print(table(data[,i],useNA="ifany"))
+}
+
+#replace any codes outside 1-7 with NA
+for (i in likert7){
+  data[,i]<- ifelse(data[,i] %in% 1:7, data[,i], NA)
+}
+sum(is.na(data$jealsex))
+
+```
+
+## 6. Calculate appearance time
+
+```{r appearance_composite}
+
+#group the appearance time variables (the eight Time_A_ items)
+#these are minutes per day
+
+#calculate appearance time as the sum of all eight items
+#Put the total NA if any item is missing
+data$appearTime<- rowSums(data[,timeVars],na.rm=FALSE)
+
+#check the score
+summary(data$appearTime)
+sum(!is.na(data$appearTime))
+
+#make h2Data with ID, appearTime, and jealsex
+#keep participants with both appearTime and jealsex present
+h2Data <- data[!is.na(data$appearTime) & !is.na(data$jealsex),
+               c("ResponseId","appearTime","jealsex")]
+
+dim(h2Data)
+summary(h2Data)
+
+```
+
+## 7. Check the final tables
+
+```{r final_tables}
+#check rows, columns, types, and missing values in h1Data
+#one row per participant, one column per variable
+dim(h1Data)
+str(h1Data)
+head(h1Data)
+colSums(is.na(h1Data))
+table(h1Data$raisedFrance,useNA="ifany")
+range(h1Data$infmoral_sex,na.rm=TRUE)
+range(h1Data$infmoral_emo,na.rm=TRUE)
+sum(duplicated(h1Data$ResponseId))
+
+#repeat the checks for h2Data; jealsex should be within 1-7 and appearTime within 0-2880
+dim(h2Data)
+str(h2Data)
+head(h2Data)
+colSums(is.na(h2Data))
+range(h2Data$appearTime)
+range(h2Data$jealsex)
+sum(duplicated(h2Data$ResponseId))
+```
+
+## 8. Add labels and generate codebooks
+
+The descriptions come from the original codebook and our scoring decisions.
+`compact_codebook()` adds summaries from the actual data. Knit the Rmd to
+display the formatted codebooks.
+
+```{r variable_labels}
+#add a description to each h1Data column, in column order
+#include the source codes, meaning, and units
+var_label(h1Data) <- c("Unique participant ID (ResponseId)",
+                       "Country where the respondent spent most of childhood: France or Elsewhere, recoded from the text variable Country_raised; blank country excluded",
+                       "How morally wrong sexual infidelity is (infmoral_sex); 1=Not at all morally wrong, 4=Moderately morally wrong, 7=Extremely morally wrong",
+                       "How morally wrong emotional infidelity is (infmoral_emo); 1=Not at all morally wrong, 4=Moderately morally wrong, 7=Extremely morally wrong"
+)
+
+#add a description to each h2Data column, in column order
+#include response anchors and the commitment scoring rule
+var_label(h2Data) <- c("Unique participant ID (ResponseId)",
+                       "Daily time spent enhancing appearance, in minutes: sum of the eight Time_A_ items, each 0-360 where 360 means 6 hours or more; NA if any of the eight is missing",
+                       "Jealousy about a partner's purely sexual infidelity (jealsex); 1=Not at all jealous, 4=Moderately jealous, 7=Extremely jealous"
+)
+
+```
+
+H1 includes participants with an ID, a known country group (France or Elsewhere), and at least one valid infidelity rating from 1 to 7. Factor level numbers in the generated table are internal R positions, not the original survey codes.
+
+```{r h1_codebook}
+#generate the h1Data codebook
+compact_codebook(h1Data)
+
+```
+
+H2 includes participants with an ID, valid answers on all eight time items, and a valid jealsex response from 1 to 7.
+
+```{r h2_codebook}
+#generate the h2Data codebook
+compact_codebook(h2Data)
+
+```
+
+## 9. Save the final tables
+
+```{r save}
+#create data/processed_data if needed
+dir.create("../Data/processed_data",recursive=T,showWarnings=F)
+
+#save h1Data and h2Data without an extra row-number column
+write.csv(h1Data,"../Data/processed_data/project_h1.csv",row.names=F)
+write.csv(h2Data,"../Data/processed_data/project_h2.csv",row.names=F)
+
+#read the files back and confirm their dimensions
+h1Saved <- read.csv("../Data/processed_data/project_h1.csv")
+h2Saved <- read.csv("../Data/processed_data/project_h2.csv")
+dim(h1Saved)
+dim(h2Saved)
+
+```
