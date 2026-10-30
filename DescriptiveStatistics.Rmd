@@ -1,0 +1,135 @@
+---
+title: "PSY221A: Descriptive Statistics"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## 1. Load the processed data
+
+```{r load}
+# Open the project's .Rproj file before running chunks.
+# Install psych once in the Console if needed: install.packages("psych")
+#install.packages("psych")
+library(psych)
+
+h1Data <- read.csv("Data/processed_data/project_h1.csv")
+h2Data <- read.csv("Data/processed_data/project_h2.csv")
+
+```
+
+## 2. Look at the distribution first
+
+```{r histogram}
+# A histogram groups numerical values into intervals (bins).
+# Bar height shows how many observations fall in each interval.
+# Start by looking at the distribution before calculating summary statistics.
+hist(h1Data$infmoral_sex)
+hist(h1Data$infmoral_emo)
+hist(h2Data$jealsex)
+hist(h2Data$appearTime)
+
+# Add readable labels to the same histogram.
+hist(h1Data$infmoral_sex,
+     main="Distribution of moral wrongness of sexual infidelity",
+     xlab="Moral wrongness of sexual infidelity (1-7)")
+hist(h1Data$infmoral_emo,
+     main="Distribution of moral wrongness of emotional infidelity",
+     xlab="Moral wrongness of emotional infidelity (1-7)")
+hist(h2Data$jealsex,
+     main="Distribution of jealousy about partner's sexual infidelity",
+     xlab="Jealousy about partner's sexual infidelity (1-7)")
+hist(h2Data$appearTime,
+     main="Distribution of daily appearance time",
+     xlab="Daily time spent enhancing appearance (minutes)")
+```
+
+## 3. One statistic at a time
+
+```{r individual_statistics}
+# Mean: add the scores and divide by the number of observed responses.
+mean(h1Data$infmoral_sex, na.rm = TRUE)
+mean(h1Data$infmoral_emo, na.rm = TRUE)
+mean(h2Data$appearTime, na.rm = TRUE)
+mean(h2Data$jealsex, na.rm = TRUE)
+
+# Median: the middle score after sorting the responses.
+median(h1Data$infmoral_sex, na.rm = TRUE)
+median(h1Data$infmoral_emo, na.rm = TRUE)
+median(h2Data$appearTime, na.rm = TRUE)
+median(h2Data$jealsex, na.rm = TRUE)
+
+# Table: count how many people are in each category.
+table(h1Data$raisedFrance, useNA = "ifany")
+# Range: return the minimum and maximum, rather than their difference.
+range(h1Data$infmoral_sex, na.rm = TRUE)
+range(h1Data$infmoral_emo, na.rm = TRUE)
+range(h2Data$appearTime, na.rm = TRUE)
+range(h2Data$jealsex, na.rm = TRUE)
+
+# IQR: the 75th percentile minus the 25th percentile.
+IQR(h1Data$infmoral_sex, na.rm = TRUE)
+IQR(h1Data$infmoral_emo, na.rm = TRUE)
+IQR(h2Data$appearTime, na.rm = TRUE)
+IQR(h2Data$jealsex, na.rm = TRUE)
+```
+
+## 4. Standardize a variable
+
+```{r standardize}
+# scale() uses z = (original score - mean) / standard deviation by default.
+# Keep the original commitment scores and store the standardized values separately.
+# scale() returns a matrix; as.numeric() makes a simple numeric column.
+h1Data$infmoral_sex_z <- scale(h1Data$infmoral_sex)
+h1Data$infmoral_emo_z <- scale(h1Data$infmoral_emo)
+h2Data$appearTime_z <- scale(h2Data$appearTime)
+h2Data$jealsex_z <- scale(h2Data$jealsex)
+
+# Standardized scores have mean approximately 0 and standard deviation 1.
+mean(h1Data$infmoral_sex_z, na.rm=TRUE)
+sd(h1Data$infmoral_sex_z, na.rm=TRUE)
+mean(h1Data$infmoral_emo_z, na.rm=TRUE)
+sd(h1Data$infmoral_emo_z, na.rm=TRUE)
+mean(h2Data$appearTime_z, na.rm=TRUE)
+sd(h2Data$appearTime_z, na.rm=TRUE)
+mean(h2Data$jealsex_z, na.rm=TRUE)
+sd(h2Data$jealsex_z, na.rm=TRUE)
+
+```
+
+## 5. Covariance and correlation
+
+```{r association}
+# Covariance describes whether two variables tend to move together.
+# Positive: higher values tend to occur together. Negative: higher values tend to accompany lower values.
+# Its size depends on the units and is not restricted to -1 through 1.
+cov(h1Data$infmoral_sex, h1Data$infmoral_emo, use="complete.obs")
+cov(h2Data$appearTime, h2Data$jealsex, use="complete.obs")
+
+# Pearson correlation expresses a linear association on a -1 to 1 scale.
+cor(h1Data$infmoral_sex, h1Data$infmoral_emo, use="complete.obs")
+cor(h2Data$appearTime, h2Data$jealsex, use="complete.obs")
+
+# Select numerical variables only; do not include participant IDs or category codes.
+corData1 <- h1Data[, c("infmoral_sex", "infmoral_emo")]
+corData2 <- h2Data[, c("appearTime", "jealsex")]
+
+# A correlation matrix gives the correlation for each pair of columns.
+cor(corData1, use="complete.obs")
+cor(corData2, use="complete.obs")
+# The diagonal is 1 because each variable is correlated with itself.
+```
+
+## 6. Several statistics at once
+
+```{r combined_summaries}
+# summary() reports minimum, quartiles, median, mean, maximum, and missing counts when present.
+summary(corData1)
+summary(corData2)
+
+# psych::describe() reports n, mean, SD, median, minimum, maximum, range width (max minus min), skewness, kurtosis, and other summaries.
+# However it does not report every statistic above: compute IQR, cov(), and cor() separately.
+psych::describe(corData1)
+psych::describe(corData2)
+```
+
