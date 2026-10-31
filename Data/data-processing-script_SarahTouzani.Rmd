@@ -122,6 +122,7 @@ for (i in infVars){
   data[,i]<- ifelse(data[,i] %in% 1:7, data[,i], NA)
 }
 
+
 #make h1Data with ID, raisedFrance, infmoral_sex, and infmoral_emo
 #keep participants with a known country group and at least one valid rating
 h1Data <- data[!is.na(data$raisedFrance) &
@@ -186,6 +187,15 @@ data$appearTime<- rowSums(data[,timeVars],na.rm=FALSE)
 #check the score
 summary(data$appearTime)
 sum(!is.na(data$appearTime))
+
+###JK: Your eight-item sum and complete-response rule are clear; please also inspect totals above 24 hours. ###
+# In the final H2 table, 500 participants have appearance-time totals above 1,440 minutes, with a maximum of 2,880.
+# You can inspect them and explain how you will interpret or handle them.
+# After creating h2Data below, you can inspect these cases with:
+# sum(h2Data$appearTime > 1440)
+# range(h2Data$appearTime)
+# head(h2Data[h2Data$appearTime > 1440, ])
+###  End of comment ###
 
 #make h2Data with ID, appearTime, and jealsex
 #keep participants with both appearTime and jealsex present
