@@ -188,7 +188,7 @@ data$appearTime<- rowSums(data[,timeVars],na.rm=FALSE)
 summary(data$appearTime)
 sum(!is.na(data$appearTime))
 
-###JK: Your eight-item sum and complete-response rule are clear; please also inspect totals above 24 hours. ###
+###JK: Please also inspect totals above 24 hours. ###
 # In the final H2 table, 500 participants have appearance-time totals above 1,440 minutes, with a maximum of 2,880.
 # You can inspect them and explain how you will interpret or handle them.
 # After creating h2Data below, you can inspect these cases with:
