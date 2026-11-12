@@ -1,0 +1,108 @@
+---
+title: "Country Raised, Infidelity Morality, Appearance Time, and Jealousy"
+author: "Sarah Touzani"
+format:
+  html:
+    toc: true
+    code-fold: true
+execute:
+  echo: true
+---
+
+```{r}
+#| label: load-data
+#| include: false
+library(ggplot2)
+library(ggrain)
+
+h1Data <- read.csv("Data/processed_data/project_h1.csv")
+h1Data$raisedFrance <- factor(h1Data$raisedFrance,
+                              levels = c("France", "Elsewhere"))
+h2Data <- read.csv("Data/processed_data/project_h2.csv")
+```
+
+## Hypothesis 1
+
+Respondents who spent most of their childhood in France rate infidelity as less morally wrong than respondents raised elsewhere.
+
+### Variables and descriptive statistics
+
+- **Country raised (`raisedFrance`):** A categorical variable with two groups: France and Elsewhere. It was recoded from the free-text country where the respondent spent most of their childhood.
+- **Moral wrongness of sexual infidelity (`infmoral_sex`):** Rating from 1 (Not at all) to 7 (Extremely). Higher values indicate that sexual infidelity is judged as more morally wrong.
+- **Moral wrongness of emotional infidelity (`infmoral_emo`):** Rating from 1 (Not at all) to 7 (Extremely). Higher values indicate that emotional infidelity is judged as more morally wrong.
+
+```{r}
+#| label: h1-descriptives
+# Count respondents in each group.
+table(h1Data$raisedFrance)
+
+# Summarize each rating separately for each group.
+by(h1Data$infmoral_sex, h1Data$raisedFrance, summary)
+by(h1Data$infmoral_emo, h1Data$raisedFrance, summary)
+```
+
+### Graph
+
+@fig-infmoral shows the distribution of sexual infidelity ratings by country raised. The half-violin shows the shape of the distribution, the box summarizes the median and quartiles, and the dots represent individual responses.
+
+```{r}
+#| label: fig-infmoral
+#| fig-cap: "Moral wrongness of sexual infidelity, by country raised."
+#| fig-width: 8
+#| fig-height: 5
+
+ggplot(h1Data, aes(x = raisedFrance, y = infmoral_sex,
+                   fill = raisedFrance)) +
+  geom_rain(alpha = 0.5, likert = TRUE,
+            point.args = list(alpha = 0.01, size = 0.4)) +
+  labs(x = "Country where the respondent was raised",
+       y = "Moral wrongness of sexual infidelity (1 to 7)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+### Observed trend
+
+Respondents raised in France rated sexual infidelity as less morally wrong on average (M = 5.33, median = 6) than respondents raised elsewhere (M = 6.00, median = 7), although the distributions overlap substantially, and both groups used the full 1 to 7 range. The same direction appeared for emotional infidelity (M = 4.49 for France vs. 5.42 for Elsewhere). The France group (n = 2,074) was much smaller than the Elsewhere group (n = 84,092), so its distribution should be interpreted cautiously. These are descriptive patterns, not a test of the hypothesis.
+
+## H2. Appearance time and jealousy
+
+Respondents who spend more time per day on their appearance are more jealous about their partner's sexual infidelity.
+
+### Variables and descriptive statistics
+
+- **Daily time spent on appearance (`appearTime`):** The sum, in minutes, of eight items about daily time spent on makeup, hygiene, cosmetics, exercise, hair, dressing, diet, and other appearance activities. Each item ranges from 0 to 360 minutes (360 means 6 hours or more). The total is missing if any of the eight items is missing.
+- **Jealousy about a partner's sexual infidelity (`jealsex`):** Rating from 1 (Not at all) to 7 (Extremely). Higher values indicate more jealousy.
+
+```{r}
+#| label: h2-descriptives
+summary(h2Data[, c("appearTime", "jealsex")])
+```
+
+### Graph
+
+@fig-appearance shows the relationship between appearance time and jealousy. Points are jittered up and down to make overlapping responses easier to see; the recorded scores are unchanged. The line summarizes the linear trend.
+
+```{r}
+#| label: fig-appearance
+#| fig-cap: "Daily time spent on appearance and jealousy about a partner's sexual infidelity."
+#| fig-width: 8
+#| fig-height: 5
+
+ggplot(h2Data, aes(x = appearTime, y = jealsex)) +
+  geom_jitter(width = 0, height = .12, alpha = .15, size = .6) +
+  geom_smooth(method = "lm") +
+  labs(x = "Daily time spent on appearance (minutes)",
+       y = "Jealousy about partner's sexual infidelity (1 to 7)") +
+  theme_minimal()
+```
+
+### Observed trend
+
+```{r}
+#| label: correlation
+r <- cor(h2Data$appearTime, h2Data$jealsex, use = "complete.obs")
+round(r, 2)
+```
+
+The correlation was `{r} round(r, 2)`, indicating a weak negative association. Respondents who reported spending more time on their appearance tended to report less jealousy about their partner’s sexual infidelity, which is the opposite of the direction H2 predicted. This is a descriptive pattern, not a test of the hypothesis.
