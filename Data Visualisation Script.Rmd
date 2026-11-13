@@ -7,6 +7,9 @@ editor_options:
   chunk_output_type: console
 ---
 
+###JK: Good work! Nothing to revise :) ###
+
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
