@@ -188,15 +188,6 @@ data$appearTime<- rowSums(data[,timeVars],na.rm=FALSE)
 summary(data$appearTime)
 sum(!is.na(data$appearTime))
 
-###JK: Please also inspect totals above 24 hours. ###
-# In the final H2 table, 500 participants have appearance-time totals above 1,440 minutes, with a maximum of 2,880.
-# You can inspect them and explain how you will interpret or handle them.
-# After creating h2Data below, you can inspect these cases with:
-# sum(h2Data$appearTime > 1440)
-# range(h2Data$appearTime)
-# head(h2Data[h2Data$appearTime > 1440, ])
-###  End of comment ###
-
 #make h2Data with ID, appearTime, and jealsex
 #keep participants with both appearTime and jealsex present
 h2Data <- data[!is.na(data$appearTime) & !is.na(data$jealsex),
@@ -204,6 +195,37 @@ h2Data <- data[!is.na(data$appearTime) & !is.na(data$jealsex),
 
 dim(h2Data)
 summary(h2Data)
+
+#TA check: inspect totals above 1440 minutes (24 hours)
+sum(h2Data$appearTime > 1440)
+range(h2Data$appearTime)
+head(h2Data[h2Data$appearTime > 1440, ])
+
+#how many totals are exactly 2880, the highest possible total (8 items x 360 minutes)
+sum(h2Data$appearTime == 2880)
+
+#among the totals above 1440, how many answered 360 ("6 hours or more") on all eight items?
+over <- data[data$ResponseId %in% h2Data$ResponseId[h2Data$appearTime > 1440], ]
+sum(rowSums(over[, timeVars] == 360, na.rm = TRUE) == 8)
+
+#how many totals are 0 (0 on all eight items)?
+sum(h2Data$appearTime == 0)
+
+#compare the correlation with and without totals above 1440
+cor(h2Data$appearTime, h2Data$jealsex)
+h2Under <- h2Data[h2Data$appearTime <= 1440, ]
+cor(h2Under$appearTime, h2Under$jealsex)
+dim(h2Under)
+
+#Totals above 1440 minutes (24 hours) were kept. 500 respondents have such totals,
+#65 of them at 2880 (360 on all eight items, the maximum). Each item is capped
+#at 360 ("6 hours or more"), so these respondents probably spend a lot of time
+#on these activities but the scale cannot measure how much, and activities may
+#overlap. Removing only the people at the maximum would be inconsistent unless
+#people with 0 on all items (3 respondents) were also removed, so no cases were removed.
+#For comparison, the correlation between appearTime and jealsex is -0.26 with all
+#cases and -0.11 when totals above 1440 are left out, so the association is
+#weaker without them but stays negative.
 
 ```
 

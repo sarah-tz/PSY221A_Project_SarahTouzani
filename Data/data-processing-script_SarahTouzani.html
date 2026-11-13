@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sarah Touzani" />
 
-<meta name="date" content="2026-10-16" />
+<meta name="date" content="2026-11-13" />
 
 <title>PSY221A: Data Validation and Wrangling</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">PSY221A: Data Validation and Wrangling</h1>
 <h4 class="author">Sarah Touzani</h4>
-<h4 class="date">2026-10-16</h4>
+<h4 class="date">2026-11-13</h4>
 
 </div>
 
@@ -619,6 +619,7 @@ for (i in infVars){
   data[,i]&lt;- ifelse(data[,i] %in% 1:7, data[,i], NA)
 }
 
+
 #make h1Data with ID, raisedFrance, infmoral_sex, and infmoral_emo
 #keep participants with a known country group and at least one valid rating
 h1Data &lt;- data[!is.na(data$raisedFrance) &amp;
@@ -729,6 +730,46 @@ dim(h2Data)</code></pre>
 ##  Min.nchar:  17   Mean   : 569.2   Mean   :6.003  
 ##  Max.nchar:  18   3rd Qu.: 573.0   3rd Qu.:7.000  
 ##                   Max.   :2880.0   Max.   :7.000</code></pre>
+<pre class="r"><code>#TA check: inspect totals above 1440 minutes (24 hours)
+sum(h2Data$appearTime &gt; 1440)</code></pre>
+<pre><code>## [1] 500</code></pre>
+<pre class="r"><code>range(h2Data$appearTime)</code></pre>
+<pre><code>## [1]    0 2880</code></pre>
+<pre class="r"><code>head(h2Data[h2Data$appearTime &gt; 1440, ])</code></pre>
+<pre><code>##             ResponseId appearTime jealsex
+## 92   R_1KeX9NoK2jFlsAb       2050       7
+## 1156 R_3JrWo2gKW7tlbWP       1885       5
+## 2752 R_1P1KDOdYZKnfUFD       1843       7
+## 3000 R_1d6PtQNFqRVFUgK       1763       7
+## 3150 R_1H6v9OmDACd5hbe       2634       7
+## 3299 R_2UaqdK3p59OombN       2088       5</code></pre>
+<pre class="r"><code>#how many totals are exactly 2880, the highest possible total (8 items x 360 minutes)
+sum(h2Data$appearTime == 2880)</code></pre>
+<pre><code>## [1] 65</code></pre>
+<pre class="r"><code>#among the totals above 1440, how many answered 360 (&quot;6 hours or more&quot;) on all eight items?
+over &lt;- data[data$ResponseId %in% h2Data$ResponseId[h2Data$appearTime &gt; 1440], ]
+sum(rowSums(over[, timeVars] == 360, na.rm = TRUE) == 8)</code></pre>
+<pre><code>## [1] 65</code></pre>
+<pre class="r"><code>#how many totals are 0 (0 on all eight items)?
+sum(h2Data$appearTime == 0)</code></pre>
+<pre><code>## [1] 3</code></pre>
+<pre class="r"><code>#compare the correlation with and without totals above 1440
+cor(h2Data$appearTime, h2Data$jealsex)</code></pre>
+<pre><code>## [1] -0.2576469</code></pre>
+<pre class="r"><code>h2Under &lt;- h2Data[h2Data$appearTime &lt;= 1440, ]
+cor(h2Under$appearTime, h2Under$jealsex)</code></pre>
+<pre><code>## [1] -0.1091708</code></pre>
+<pre class="r"><code>dim(h2Under)</code></pre>
+<pre><code>## [1] 6746    3</code></pre>
+<pre class="r"><code>#Totals above 1440 minutes (24 hours) were kept. 500 respondents have such totals,
+#65 of them at 2880 (360 on all eight items, the maximum). Each item is capped
+#at 360 (&quot;6 hours or more&quot;), so these respondents probably spend a lot of time
+#on these activities but the scale cannot measure how much, and activities may
+#overlap. Removing only the people at the maximum would be inconsistent unless
+#people with 0 on all items (3 respondents) were also removed, so no cases were removed.
+#For comparison, the correlation between appearTime and jealsex is -0.26 with all
+#cases and -0.11 when totals above 1440 are left out, so the association is
+#weaker without them but stays negative.</code></pre>
 </div>
 <div id="check-the-final-tables" class="section level2">
 <h2>7. Check the final tables</h2>
@@ -826,7 +867,7 @@ missing values on any column.</p>
 Metadata for search engines
 </summary>
 <ul>
-<li><strong>Date published</strong>: 2026-10-16</li>
+<li><strong>Date published</strong>: 2026-11-13</li>
 </ul>
 <table>
 <thead>
@@ -978,7 +1019,7 @@ morally wrong</td>
 <script type="application/ld+json">
 {
   "name": "results",
-  "datePublished": "2026-10-16",
+  "datePublished": "2026-11-13",
   "description": "The dataset has N=86166 rows and 4 columns.\n86032 rows have no missing values on any column.\n\n\n## Table of variables\nThis table contains variable names, labels, and number of missing values.\nSee the complete codebook for more.\n\n|name         |label                                                                                                                                            | n_missing|\n|:------------|:------------------------------------------------------------------------------------------------------------------------------------------------|---------:|\n|ResponseId   |Unique participant ID (ResponseId)                                                                                                               |         0|\n|raisedFrance |Country where the respondent spent most of childhood: France or Elsewhere, recoded from the text variable Country_raised; blank country excluded |         0|\n|infmoral_sex |How morally wrong sexual infidelity is (infmoral_sex); 1=Not at all morally wrong, 4=Moderately morally wrong, 7=Extremely morally wrong         |        73|\n|infmoral_emo |How morally wrong emotional infidelity is (infmoral_emo); 1=Not at all morally wrong, 4=Moderately morally wrong, 7=Extremely morally wrong      |        61|\n\n### Note\nThis dataset was automatically described using the [codebook R package](https://rubenarslan.github.io/codebook/) (version 0.10.1).",
   "keywords": ["ResponseId", "raisedFrance", "infmoral_sex", "infmoral_emo"],
   "@context": "https://schema.org/",
@@ -1016,7 +1057,7 @@ JSON-LD metadata
 this codebook publicly on the web.</p>
 <pre class="json"><code>{
   &quot;name&quot;: &quot;results&quot;,
-  &quot;datePublished&quot;: &quot;2026-10-16&quot;,
+  &quot;datePublished&quot;: &quot;2026-11-13&quot;,
   &quot;description&quot;: &quot;The dataset has N=86166 rows and 4 columns.\n86032 rows have no missing values on any column.\n\n\n## Table of variables\nThis table contains variable names, labels, and number of missing values.\nSee the complete codebook for more.\n\n|name         |label                                                                                                                                            | n_missing|\n|:------------|:------------------------------------------------------------------------------------------------------------------------------------------------|---------:|\n|ResponseId   |Unique participant ID (ResponseId)                                                                                                               |         0|\n|raisedFrance |Country where the respondent spent most of childhood: France or Elsewhere, recoded from the text variable Country_raised; blank country excluded |         0|\n|infmoral_sex |How morally wrong sexual infidelity is (infmoral_sex); 1=Not at all morally wrong, 4=Moderately morally wrong, 7=Extremely morally wrong         |        73|\n|infmoral_emo |How morally wrong emotional infidelity is (infmoral_emo); 1=Not at all morally wrong, 4=Moderately morally wrong, 7=Extremely morally wrong      |        61|\n\n### Note\nThis dataset was automatically described using the [codebook R package](https://rubenarslan.github.io/codebook/) (version 0.10.1).&quot;,
   &quot;keywords&quot;: [&quot;ResponseId&quot;, &quot;raisedFrance&quot;, &quot;infmoral_sex&quot;, &quot;infmoral_emo&quot;],
   &quot;@context&quot;: &quot;https://schema.org/&quot;,
@@ -1062,7 +1103,7 @@ values on any column.</p>
 Metadata for search engines
 </summary>
 <ul>
-<li><strong>Date published</strong>: 2026-10-16</li>
+<li><strong>Date published</strong>: 2026-11-13</li>
 </ul>
 <table>
 <thead>
@@ -1177,7 +1218,7 @@ jealous</td>
 <script type="application/ld+json">
 {
   "name": "results",
-  "datePublished": "2026-10-16",
+  "datePublished": "2026-11-13",
   "description": "The dataset has N=7246 rows and 3 columns.\n7246 rows have no missing values on any column.\n\n\n## Table of variables\nThis table contains variable names, labels, and number of missing values.\nSee the complete codebook for more.\n\n|name       |label                                                                                                                                                            | n_missing|\n|:----------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------|---------:|\n|ResponseId |Unique participant ID (ResponseId)                                                                                                                               |         0|\n|appearTime |Daily time spent enhancing appearance, in minutes: sum of the eight Time_A_ items, each 0-360 where 360 means 6 hours or more; NA if any of the eight is missing |         0|\n|jealsex    |Jealousy about a partner's purely sexual infidelity (jealsex); 1=Not at all jealous, 4=Moderately jealous, 7=Extremely jealous                                   |         0|\n\n### Note\nThis dataset was automatically described using the [codebook R package](https://rubenarslan.github.io/codebook/) (version 0.10.1).",
   "keywords": ["ResponseId", "appearTime", "jealsex"],
   "@context": "https://schema.org/",
@@ -1209,7 +1250,7 @@ JSON-LD metadata
 this codebook publicly on the web.</p>
 <pre class="json"><code>{
   &quot;name&quot;: &quot;results&quot;,
-  &quot;datePublished&quot;: &quot;2026-10-16&quot;,
+  &quot;datePublished&quot;: &quot;2026-11-13&quot;,
   &quot;description&quot;: &quot;The dataset has N=7246 rows and 3 columns.\n7246 rows have no missing values on any column.\n\n\n## Table of variables\nThis table contains variable names, labels, and number of missing values.\nSee the complete codebook for more.\n\n|name       |label                                                                                                                                                            | n_missing|\n|:----------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------|---------:|\n|ResponseId |Unique participant ID (ResponseId)                                                                                                                               |         0|\n|appearTime |Daily time spent enhancing appearance, in minutes: sum of the eight Time_A_ items, each 0-360 where 360 means 6 hours or more; NA if any of the eight is missing |         0|\n|jealsex    |Jealousy about a partner&#39;s purely sexual infidelity (jealsex); 1=Not at all jealous, 4=Moderately jealous, 7=Extremely jealous                                   |         0|\n\n### Note\nThis dataset was automatically described using the [codebook R package](https://rubenarslan.github.io/codebook/) (version 0.10.1).&quot;,
   &quot;keywords&quot;: [&quot;ResponseId&quot;, &quot;appearTime&quot;, &quot;jealsex&quot;],
   &quot;@context&quot;: &quot;https://schema.org/&quot;,
