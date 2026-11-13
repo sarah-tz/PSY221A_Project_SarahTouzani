@@ -5,6 +5,7 @@ format:
   html:
     toc: true
     code-fold: true
+    embed-resources: true
 execute:
   echo: true
 ---
